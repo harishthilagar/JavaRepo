@@ -13,24 +13,23 @@ import org.openqa.selenium.chrome.ChromeOptions;
 
 import com.gowtham.contants.UIConstants;
 import com.gowtham.dataprovider.DataProvider2;
+import com.gowtham.fileWriter.FileWriters;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class DownloadFile {
-
 	public static void main(String[] args) {
 		setup();
 		DataProvider2 dp = new DataProvider2();
-		LinkedList<Integer> list = dp.getData();
+		LinkedList<String> list = dp.getData();
 		write(list);
 		tearDown();
-
 	}
 
 	public static WebDriver driver;
 
 	public static void setup() {
-		String downloadFilepath = "D:\\attach\\"+UIConstants.EXCEL_NAME;
+		String downloadFilepath = "D:\\attach\\" + UIConstants.EXCEL_NAME;
 		HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
 		chromePrefs.put("profile.default_content_settings.popups", 0);
 		chromePrefs.put("download.default_directory", downloadFilepath);
@@ -42,40 +41,57 @@ public class DownloadFile {
 		driver.manage().window().maximize();
 	}
 
-	public static void write(LinkedList<Integer> list) {
+	public static void write(LinkedList<String> list) {
 		driver.get(UIConstants.BASE_URL);
-		
+
 		WebElement username = driver.findElement(By.xpath("//input[@id='ctl00_SmartMasterContent_rtbuserlogin']"));
 		username.sendKeys(UIConstants.USERNAME);
-		
+
 		WebElement password = driver.findElement(By.xpath("//input[@id='ctl00_SmartMasterContent_rtbpasswd']"));
 		password.sendKeys(UIConstants.PASSWORD);
-		
+
 		driver.findElement(By.xpath("//input[@id='ctl00_SmartMasterContent_rblogin_input']")).click();
-		
-		for (int value : list) {
-			driver.get(UIConstants.BASE_URL1+ value);
+		String txtValue ="";
+		for (String value : list) {
+			driver.get(UIConstants.BASE_URL1 + value);
 			WebElement attachment = driver.findElement(By.xpath("//li[@class='rtsLI'][3]"));
 			attachment.click();
-		    
-			List<WebElement> table = driver.findElements(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tbody//tr"));
-			
-			for (int i = 1; i <= table.size(); i++) {
-				WebElement tr = driver.findElement(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tr["+ i + "]//td[3]"));
-				String tdText = tr.getText();	
-				if (tdText.contains("OnlineFirst") && !tdText.contains("OnlineFirst PDF")) {
-					driver.findElement(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tr["+ i + "]//td[1]//input")).click();
-				}
-			}
-			
-			driver.findElement(By.xpath("//a[@class='rightAligned rtbWrap']")).click();
+			List<WebElement> tableBody = driver.findElements(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tbody//tr//td[3]"));
 
-			try {
-				Thread.sleep(UIConstants.SLEEP_TIME);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			String text2 = null;
+			for (WebElement text : tableBody) {
+				String text1 = text.getText();
+				String temp = text1;
+				text2 = text2 + temp;
+			}
+
+			if (text2.contains("Online")) {
+				List<WebElement> table = driver.findElements(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tbody//tr"));
+				for (int i = 1; i <= table.size(); i++) {
+					WebElement tr = driver.findElement(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tr["+ i + "]//td[3]"));
+					String tdText = tr.getText();
+
+					if (tdText.contains("OnlineFirst") && !tdText.contains("OnlineFirst PDF")) {
+						driver.findElement(By.xpath("//table[@id='ctl00_ArticleAttachmentGrid_uc_ArticleAttachmentGridEdit_ctl00']//tr[" + i + "]//td[1]//input")).click();
+					}
+				}
+
+				driver.findElement(By.xpath("//a[@class='rightAligned rtbWrap']")).click();
+
+				try {
+					Thread.sleep(UIConstants.SLEEP_TIME);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			} else {				
+				String value1 = value;
+				String temp = value1;
+				txtValue = txtValue+", "+temp; 
 			}
 		}
+		FileWriters fw = new FileWriters();
+		fw.writeMethod(txtValue);
+		
 	}
 
 	public static void tearDown() {

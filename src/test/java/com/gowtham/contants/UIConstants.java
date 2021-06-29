@@ -16,5 +16,5 @@ public class UIConstants {
 	
 	public static final String EXCEL_NAME = "issue";
 	
-	public static final int SLEEP_TIME = 40000 ;
+	public static final int SLEEP_TIME = 1000 ;
 }
